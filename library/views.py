@@ -2,17 +2,14 @@ from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 
-from library.models import Authors
+from library.models import Authors, Books
 from library.serializer import AuthorsSerializer
 from users.permissions import IsModerator, IsOwner
 
 
 class AuthorsViewSet(ModelViewSet):
     def get_queryset(self):
-        if IsModerator().has_permission(self.request, self):
-            return Authors.objects.all()
-        else:
-            return Authors.objects.filter(owner=self.request.user)
+        return Authors.objects.all()
 
     serializer_class = AuthorsSerializer
 
@@ -30,4 +27,7 @@ class AuthorsViewSet(ModelViewSet):
 
 
 class BooksListApiView(ListAPIView):
-    pass
+    def get_queryset(self):
+        return Books.objects.all()
+
+

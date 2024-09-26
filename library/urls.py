@@ -21,7 +21,7 @@ schema_view = get_schema_view(
 
 app_name = LibraryConfig.name
 router = SimpleRouter()
-router.register("", AuthorsViewSet, basename="authers")
+router.register("", AuthorsViewSet, basename="authors")
 
 urlpatterns = [
     path("", BooksListApiView.as_view(), name="books_list"),

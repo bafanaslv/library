@@ -24,11 +24,14 @@ class Authors(models.Model):
 
 
 class Books(models.Model):
+    GENRE_LIST = [(1, "приключения"), (2, "фантастика"), (3, "рассказ"), (4, "повесть"), (5, "роман"), (6, "стихи")]
+
     isbn = models.CharField(max_length=17, unique=True, verbose_name="ISBN")
     name = models.CharField(max_length=150, verbose_name="название книги")
     author = models.ForeignKey(
         Authors, related_name="book_author", on_delete=models.CASCADE, verbose_name="автор"
     )
+    genre = models.CharField(max_length=20, choices=GENRE_LIST, verbose_name="жанр", default=1)
     description = models.TextField(verbose_name="описание")
     quantity_all = models.PositiveIntegerField(verbose_name="всего в библиотеке")
     quantity = models.PositiveIntegerField(verbose_name="выдано всего")
