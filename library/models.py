@@ -1,84 +1,75 @@
+from datetime import datetime
 from django.db import models
-
 from config import settings
 
 NULLABLE = {"blank": True, "null": True}
 
 
-class Courses(models.Model):
-    name = models.CharField(max_length=150, verbose_name="название")
-    description = models.TextField(verbose_name="описание")
+class Authors(models.Model):
+    isni = models.CharField(max_length=16, unique=True, verbose_name="ISNI")
+    author = models.CharField(max_length=150, verbose_name="имя (псевдоним) автора")
     image = models.ImageField(
-        upload_to="courses/media",
+        upload_to="authors/media",
         verbose_name="изображение",
-        help_text="загрузите изображение",
-        **NULLABLE,
-    )
-    owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        verbose_name="владелец",
+        help_text="загрузите изображение автора",
         **NULLABLE,
     )
 
     class Meta:
-        verbose_name = "курс"
-        verbose_name_plural = "курсы"
+        verbose_name = "автор"
+        verbose_name_plural = "авторы"
 
     def str(self):
-        return f"Курс: {self.name}"
+        return f"Автор: {self.author}"
 
 
-class Lessons(models.Model):
-    name = models.CharField(max_length=150, verbose_name="название")
-    course = models.ForeignKey(
-        Courses, related_name="courses", on_delete=models.CASCADE, verbose_name="курс"
+class Books(models.Model):
+    GENRE_LIST = [(1, "приключения"), (2, "фантастика"), (3, "рассказ"), (4, "повесть"), (5, "роман"), (6, "стихи")]
+
+    isbn = models.CharField(max_length=17, unique=True, verbose_name="ISBN")
+    name = models.CharField(max_length=150, verbose_name="название книги")
+    author = models.ForeignKey(
+        Authors, related_name="book_author", on_delete=models.CASCADE, verbose_name="автор"
     )
+    genre = models.CharField(max_length=20, choices=GENRE_LIST, verbose_name="жанр", default=1)
     description = models.TextField(verbose_name="описание")
+    quantity_all = models.PositiveIntegerField(verbose_name="всего в библиотеке")
+    quantity = models.PositiveIntegerField(verbose_name="выдано всего")
     image = models.ImageField(
-        upload_to="lessons/media",
-        verbose_name="изображение",
-        help_text="загрузите изображение",
-        **NULLABLE,
-    )
-    video = models.URLField(
-        max_length=300,
-        verbose_name="Видео урока",
-        help_text="Загрузите видео урока",
-        **NULLABLE,
-    )
-    owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        verbose_name="владелец",
+        upload_to="books/media",
+        verbose_name="обложка",
+        help_text="загрузите обложку",
         **NULLABLE,
     )
 
     def str(self):
-        return f"Урок: {self.name}"
+        return f"Книга: {self.name}"
 
     class Meta:
-        verbose_name = "урок"
-        verbose_name_plural = "уроки"
+        verbose_name = "книга"
+        verbose_name_plural = "книги"
 
 
-class Subscription(models.Model):
+class Lending(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        verbose_name="Пользователь",
-        related_name="subscription_user",
+        verbose_name="читатель",
+        related_name="lending_user",
     )
-    course = models.ForeignKey(
-        Courses,
+    book = models.ForeignKey(
+        Books,
         on_delete=models.CASCADE,
-        verbose_name="Курс",
-        related_name="subscription_course",
+        verbose_name="книга",
+        related_name="lending_book",
     )
+    date = models.DateField(verbose_name="дата выдачи", default=datetime.now)
+    days = models.PositiveIntegerField(verbose_name="количество дней", default=10)
+    is_returned = models.BooleanField(verbose_name="возвращена", default=False)
 
     def __str__(self):
-        return f"{self.user} - {self.course}"
+        return f"{self.user} - {self.book}"
 
     class Meta:
-        verbose_name = "Подписка"
-        verbose_name_plural = "Подписки"
+        verbose_name = "выдача"
+        verbose_name_plural = "выдачи"
