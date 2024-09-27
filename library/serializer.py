@@ -1,6 +1,5 @@
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.serializers import ModelSerializer, SerializerMethodField
-from library.models import Authors, Books
+from rest_framework.serializers import ModelSerializer
+from library.models import Authors, Books, Lending
 
 
 class AuthorsSerializer(ModelSerializer):
@@ -13,4 +12,10 @@ class AuthorsSerializer(ModelSerializer):
 class BooksSerializer(ModelSerializer):
     class Meta:
         model = Books
+        fields = "__all__"
+
+
+class LendingSerializer(ModelSerializer):
+    class Meta:
+        model = Lending
         fields = "__all__"

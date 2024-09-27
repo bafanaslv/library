@@ -16,8 +16,8 @@ class Authors(models.Model):
     )
 
     class Meta:
-        verbose_name = "автор"
-        verbose_name_plural = "авторы"
+        verbose_name = "Автор"
+        verbose_name_plural = "Авторы"
 
     def str(self):
         return f"Автор: {self.author}"
@@ -47,11 +47,13 @@ class Books(models.Model):
         return f"Книга: {self.name}"
 
     class Meta:
-        verbose_name = "книга"
-        verbose_name_plural = "книги"
+        verbose_name = "Книга"
+        verbose_name_plural = "Книги"
 
 
 class Lending(models.Model):
+    EVENTS = [("issuance", "выдача"), ("return", "возврат")]
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -64,9 +66,9 @@ class Lending(models.Model):
         verbose_name="книга",
         related_name="lending_book",
     )
-    date = models.DateField(verbose_name="дата выдачи", default=datetime.now)
+    date = models.DateField(verbose_name="дата", default=datetime.now)
     days = models.PositiveIntegerField(verbose_name="количество дней", default=10)
-    is_returned = models.BooleanField(verbose_name="возвращена", default=False)
+    event = models.CharField(max_length=8, choices=EVENTS, verbose_name="событие", default="issuance")
 
     def __str__(self):
         return f"{self.user} - {self.book}"

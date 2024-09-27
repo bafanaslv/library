@@ -5,7 +5,8 @@ from rest_framework import permissions
 from library.apps import LibraryConfig
 from library.views import (AuthorsListApiView, AuthorsCreateApiView, AuthorsRetrieveApiView, AuthorsUpdateApiView,
                            AuthorsDestroyApiView, BooksListApiView, BooksCreateApiView, BooksRetrieveApiView,
-                           BooksUpdateApiView, BooksDestroyApiView)
+                           BooksUpdateApiView, BooksDestroyApiView, LendingListApiView, LendingCreateApiView,
+                           LendingRetrieveApiView, LendingUpdateApiView, LendingDestroyApiView)
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -33,5 +34,10 @@ urlpatterns = [
     path("books/create/", BooksCreateApiView.as_view(), name="book_create"),
     path("books/<int:pk>/", BooksRetrieveApiView.as_view(), name="book_retrieve"),
     path("books/update/<int:pk>/", BooksUpdateApiView.as_view(), name="book_update"),
-    path("books/delete/<int:pk>/", BooksDestroyApiView.as_view(), name="book_delete")
+    path("books/delete/<int:pk>/", BooksDestroyApiView.as_view(), name="book_delete"),
+    path("lending/", LendingListApiView.as_view(), name="lending_list"),
+    path("lending/create/", LendingCreateApiView.as_view(), name="lending_create"),
+    path("lending/<int:pk>/", LendingRetrieveApiView.as_view(), name="lending_retrieve"),
+    path("lending/update/<int:pk>/", LendingUpdateApiView.as_view(), name="lending_update"),
+    path("lending/delete/<int:pk>/", LendingDestroyApiView.as_view(), name="lending_delete"),
 ]
