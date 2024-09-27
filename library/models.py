@@ -33,6 +33,7 @@ class Books(models.Model):
     )
     genre = models.CharField(max_length=20, choices=GENRE_LIST, verbose_name="жанр", default=1)
     description = models.TextField(verbose_name="описание")
+    barcode = models.PositiveIntegerField(verbose_name="штрихкод")
     quantity_all = models.PositiveIntegerField(verbose_name="всего в библиотеке")
     quantity = models.PositiveIntegerField(verbose_name="выдано всего")
     image = models.ImageField(

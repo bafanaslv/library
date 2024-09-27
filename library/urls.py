@@ -26,3 +26,4 @@ router.register("", AuthorsViewSet, basename="authors")
 urlpatterns = [
     path("", BooksListApiView.as_view(), name="books_list"),
 ]
+urlpatterns += router.urls
