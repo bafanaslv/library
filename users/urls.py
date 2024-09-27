@@ -10,11 +10,11 @@ from users.views import (UserCreateAPIView, UserDestroyAPIView,
 app_name = UsersConfig.name
 
 urlpatterns = [
-    path("", UserListAPIView.as_view(), name="users_list"),
+    path("", UserListAPIView.as_view(), name="list"),
     path("register/", UserCreateAPIView.as_view(), name="register"),
-    path("<int:pk>/", UserRetrieveAPIView.as_view(), name="users_retrieve"),
-    path("update/<int:pk>/", UserUpdateAPIView.as_view(), name="users_update"),
-    path("delete/<int:pk>/", UserDestroyAPIView.as_view(), name="users_delete"),
+    path("<int:pk>/", UserRetrieveAPIView.as_view(), name="retrieve"),
+    path("update/<int:pk>/", UserUpdateAPIView.as_view(), name="update"),
+    path("delete/<int:pk>/", UserDestroyAPIView.as_view(), name="delete"),
     path(
         "login/",
         UserTokenObtainPairView.as_view(permission_classes=(AllowAny,)),
