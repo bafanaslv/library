@@ -5,7 +5,7 @@ from library.urls import schema_view
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("users/", include("users.urls", namespace="users")),
-    path("authors/", include("library.urls", namespace="authors")),
+    path("", include("library.urls", namespace="library")),
     path(
         "swagger/",
         schema_view.with_ui("swagger", cache_timeout=0),

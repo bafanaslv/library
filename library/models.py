@@ -32,10 +32,10 @@ class Books(models.Model):
         Authors, related_name="book_author", on_delete=models.CASCADE, verbose_name="автор"
     )
     genre = models.CharField(max_length=20, choices=GENRE_LIST, verbose_name="жанр", default=1)
-    description = models.TextField(verbose_name="описание")
+    description = models.TextField(verbose_name="описание", **NULLABLE)
     barcode = models.PositiveIntegerField(verbose_name="штрихкод")
     quantity_all = models.PositiveIntegerField(verbose_name="всего в библиотеке")
-    quantity = models.PositiveIntegerField(verbose_name="выдано всего")
+    quantity = models.PositiveIntegerField(verbose_name="выдано всего", default=0)
     image = models.ImageField(
         upload_to="books/media",
         verbose_name="обложка",

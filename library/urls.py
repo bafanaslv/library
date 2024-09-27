@@ -3,8 +3,9 @@ from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 from library.apps import LibraryConfig
-from rest_framework.routers import SimpleRouter
-from library.views import AuthorsViewSet, BooksListApiView
+from library.views import (AuthorsListApiView, AuthorsCreateApiView, AuthorsRetrieveApiView, AuthorsUpdateApiView,
+                           AuthorsDestroyApiView, BooksListApiView, BooksCreateApiView, BooksRetrieveApiView,
+                           BooksUpdateApiView, BooksDestroyApiView)
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -20,10 +21,17 @@ schema_view = get_schema_view(
 )
 
 app_name = LibraryConfig.name
-router = SimpleRouter()
-router.register("", AuthorsViewSet, basename="authors")
+
 
 urlpatterns = [
-    path("", BooksListApiView.as_view(), name="books_list"),
+    path("authors/", AuthorsListApiView.as_view(), name="authors_list"),
+    path("authors/create/", AuthorsCreateApiView.as_view(), name="author_create"),
+    path("authors/<int:pk>/", AuthorsRetrieveApiView.as_view(), name="author_retrieve"),
+    path("authors/update/<int:pk>/", AuthorsUpdateApiView.as_view(), name="author_update"),
+    path("authors/delete/<int:pk>/", AuthorsDestroyApiView.as_view(), name="author_delete"),
+    path("books/", BooksListApiView.as_view(), name="books_list"),
+    path("books/create/", BooksCreateApiView.as_view(), name="book_create"),
+    path("books/<int:pk>/", BooksRetrieveApiView.as_view(), name="book_retrieve"),
+    path("books/update/<int:pk>/", BooksUpdateApiView.as_view(), name="book_update"),
+    path("books/delete/<int:pk>/", BooksDestroyApiView.as_view(), name="book_delete")
 ]
-urlpatterns += router.urls
