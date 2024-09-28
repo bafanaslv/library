@@ -72,7 +72,7 @@ class Lending(models.Model):
     event = models.CharField(max_length=9, choices=EVENTS, verbose_name="действие", default="issuance")
 
     def __str__(self):
-        return f"{self.user} - {self.book}"
+        return f"{self.user} : {self.book} - {self.event}"
 
     class Meta:
         verbose_name = "выдача"
