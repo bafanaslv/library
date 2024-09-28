@@ -53,7 +53,7 @@ class Books(models.Model):
 
 
 class Lending(models.Model):
-    EVENTS = [("issuance", "выдача"), ("return", "возврат")]
+    EVENTS = [("issuance", "выдача"), ("return", "возврат"), ("write-off", "списание")]
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -69,7 +69,7 @@ class Lending(models.Model):
     )
     date = models.DateField(verbose_name="дата", default=datetime.now)
     days = models.PositiveIntegerField(verbose_name="количество дней", default=10)
-    event = models.CharField(max_length=8, choices=EVENTS, verbose_name="событие", default="issuance")
+    event = models.CharField(max_length=9, choices=EVENTS, verbose_name="действие", default="issuance")
 
     def __str__(self):
         return f"{self.user} - {self.book}"
