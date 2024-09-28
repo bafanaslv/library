@@ -30,7 +30,7 @@ class Books(models.Model):
     isbn = models.CharField(max_length=17, unique=True, verbose_name="ISBN")
     name = models.CharField(max_length=150, verbose_name="название книги")
     author = models.ForeignKey(
-        Authors, related_name="book_author", on_delete=models.CASCADE, verbose_name="автор"
+        Authors, related_name="book_author", on_delete=models.PROTECT, verbose_name="автор"
     )
     genre = models.CharField(max_length=20, choices=GENRE, verbose_name="жанр", default="story")
     description = models.TextField(verbose_name="описание", **NULLABLE)
@@ -57,13 +57,13 @@ class Lending(models.Model):
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         verbose_name="читатель",
         related_name="lending_user",
     )
     book = models.ForeignKey(
         Books,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         verbose_name="книга",
         related_name="lending_book",
     )
