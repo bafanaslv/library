@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date
 from django.db import models
 from config import settings
 
@@ -53,8 +53,6 @@ class Books(models.Model):
 
 
 class Lending(models.Model):
-    EVENTS = [("issuance", "выдача"), ("return", "возврат"), ("write-off", "списание")]
-
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
@@ -67,12 +65,12 @@ class Lending(models.Model):
         verbose_name="книга",
         related_name="lending_book",
     )
-    date = models.DateField(verbose_name="дата", default=datetime.now)
+    date_lending = models.DateField(verbose_name="дата выдачи", default=date.today)
     days = models.PositiveIntegerField(verbose_name="количество дней", default=10)
-    event = models.CharField(max_length=9, choices=EVENTS, verbose_name="действие", default="issuance")
+    date_return = models.DateField(verbose_name="дата возврата фактическая", **NULLABLE)
 
     def __str__(self):
-        return f"{self.user} : {self.book} - {self.event}"
+        return f"{self.user} : {self.book}"
 
     class Meta:
         verbose_name = "выдача"
