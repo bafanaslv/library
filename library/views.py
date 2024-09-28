@@ -159,3 +159,4 @@ class LendingDestroyApiView(DestroyAPIView):
     queryset = Lending.objects.all()
     serializer_class = LendingSerializer
     permission_classes = [IsAuthenticated, IsLibrarian]
+
