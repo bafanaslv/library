@@ -1,7 +1,6 @@
 from rest_framework import viewsets
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, DestroyAPIView, UpdateAPIView
-from rest_framework.permissions import IsAuthenticated, AllowAny
-
 from library.models import Authors, Books, Lending
 from library.serializer import AuthorsSerializer, BooksSerializer, LendingSerializer
 from users.permissions import IsLibrarian
@@ -44,8 +43,17 @@ class LendingCreateApiView(CreateAPIView):
 
     queryset = Lending.objects.all()
     serializer_class = LendingSerializer
+    print(list(queryset))
 
     def perform_create(self, serializer):
+        lending = serializer.save()
+        book_object = Books.objects.get(pk=lending.book.pk)
+        if book_object.quantity_all == book_object.quantity_lending:
+            raise ValidationError(
+                    f"Все книги '{book_object.name}' выданы читателям !"
+                )
+        book_object.quantity_lending += 1
+        book_object.save()
         lending = serializer.save()
         lending.save()
 
