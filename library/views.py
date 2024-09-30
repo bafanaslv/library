@@ -43,18 +43,17 @@ class LendingCreateApiView(CreateAPIView):
 
     queryset = Lending.objects.all()
     serializer_class = LendingSerializer
-    print(list(queryset))
 
     def perform_create(self, serializer):
-        lending = serializer.save()
-        book_object = Books.objects.get(pk=lending.book.pk)
+        book_json_id = serializer.validated_data["book"].pk
+        book_object = Books.objects.get(pk=book_json_id)
         if book_object.quantity_all == book_object.quantity_lending:
             raise ValidationError(
                     f"Все книги '{book_object.name}' выданы читателям !"
                 )
+        lending = serializer.save()
         book_object.quantity_lending += 1
         book_object.save()
-        lending = serializer.save()
         lending.save()
 
     permission_classes = [IsLibrarian]
