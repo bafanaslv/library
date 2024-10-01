@@ -47,10 +47,6 @@ class LendingCreateApiView(CreateAPIView):
     def perform_create(self, serializer):
         book_json_id = serializer.validated_data["book"].pk
         book_object = Books.objects.get(pk=book_json_id)
-        # if book_object.quantity_all == book_object.quantity_lending:
-        #     raise ValidationError(
-        #             f"Все книги '{book_object.name}' выданы читателям !"
-        #         )
         lending = serializer.save()
         book_object.quantity_lending += 1
         book_object.save()
@@ -81,6 +77,8 @@ class LendingUpdateApiView(UpdateAPIView):
     serializer_class = LendingSerializer
 
     def perform_update(self, serializer):
+        book_json_id = serializer.validated_data["book"].pk
+        print(book_json_id)
         lending = serializer.save()
         lending.save()
 
@@ -89,6 +87,22 @@ class LendingUpdateApiView(UpdateAPIView):
 
 class LendingDestroyApiView(DestroyAPIView):
     """Удалять могут авторизованный пользователь, который является владельцем и не модератором."""
-    queryset = Lending.objects.all()
+
+    def get_queryset(self):
+        lending_object = Lending.objects.get(pk=self.kwargs['pk'])
+        book_object = Books.objects.get(pk=lending_object.book_id)
+        book_object.quantity_lending -= 1
+        book_object.save()
+            # if len(lending_object_list) == 1:
+            #     if self.kwargs['pk'] != self.request.user.id:
+            #         raise ValidationError(
+            #             "У вас недостаточно прав на просмтр учетных данных читателя !"
+            #         )
+            #     return Users.objects.filter(pk=self.request.user.id)
+            # else:
+            #     raise ValidationError(
+            #         "Такой читатель не зарегистрирован в библиотеке !"
+            #     )
+        return Lending.objects.all()
     serializer_class = LendingSerializer
     permission_classes = [IsLibrarian]

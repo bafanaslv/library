@@ -10,7 +10,7 @@ class LibraryValidators:
         for lending_objects in lending_objects_list:
             if lending_objects.date_return is None:
                 raise ValidationError(
-                    "вы уже получали эту книгу в библиотеке !"
+                    "Вы уже получИли эту книгу в библиотеке !"
                 )
 
         book_object = Books.objects.get(pk=lending_dict["book"].pk)
