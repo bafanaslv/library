@@ -1,5 +1,6 @@
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
-from rest_framework.exceptions import ValidationError
+from rest_framework.filters import OrderingFilter
 from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, DestroyAPIView, UpdateAPIView
 from library.models import Authors, Books, Lending
 from library.serializer import AuthorsSerializer, BooksSerializer, LendingSerializer
@@ -19,6 +20,9 @@ class AuthorsViewSet(viewsets.ModelViewSet):
 class BooksViewSet(viewsets.ModelViewSet):
     queryset = Books.objects.all()
     serializer_class = BooksSerializer
+    filter_backends = [OrderingFilter, DjangoFilterBackend]
+    ordering_fields = ("author", "genre")
+    filterset_fields = ("author", "genre", "name")
 
     def get_permissions(self):
         if self.action not in ["list", "retrieve"]:
@@ -34,6 +38,7 @@ class LendingListApiView(ListAPIView):
             return Lending.objects.filter(user=self.request.user)
 
     serializer_class = LendingSerializer
+
 
 
 class LendingCreateApiView(CreateAPIView):
@@ -78,7 +83,9 @@ class LendingUpdateApiView(UpdateAPIView):
 
     def perform_update(self, serializer):
         book_json_id = serializer.validated_data["book"].pk
-        print(book_json_id)
+        book_object = Books.objects.get(pk=book_json_id)
+        book_object.quantity_lending -= 1
+        book_object.save()
         lending = serializer.save()
         lending.save()
 
