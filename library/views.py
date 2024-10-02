@@ -21,9 +21,9 @@ class AuthorsViewSet(viewsets.ModelViewSet):
 class BooksViewSet(viewsets.ModelViewSet):
     queryset = Books.objects.all()
     serializer_class = BooksSerializer
-    filter_backends = [OrderingFilter, DjangoFilterBackend]
-    ordering_fields = ("author", "genre")
-    filterset_fields = ("author", "genre", "name")
+    filter_backends = [OrderingFilter, DjangoFilterBackend,]
+    ordering_fields = ("author", "genre",)
+    filterset_fields = ("author", "genre", "name",)
 
     def get_permissions(self):
         if self.action not in ["list", "retrieve"]:
@@ -39,6 +39,9 @@ class LendingListApiView(ListAPIView):
             return Lending.objects.filter(user=self.request.user)
 
     serializer_class = LendingSerializer
+    filter_backends = [OrderingFilter, DjangoFilterBackend,]
+    ordering_fields = ("book",)
+    filterset_fields = ("book", "date_return",)
 
 
 class LendingCreateApiView(CreateAPIView):
