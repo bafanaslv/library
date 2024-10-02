@@ -1,5 +1,6 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
+from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
 from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, DestroyAPIView, UpdateAPIView
 from library.models import Authors, Books, Lending
@@ -38,7 +39,6 @@ class LendingListApiView(ListAPIView):
             return Lending.objects.filter(user=self.request.user)
 
     serializer_class = LendingSerializer
-
 
 
 class LendingCreateApiView(CreateAPIView):
@@ -82,6 +82,11 @@ class LendingUpdateApiView(UpdateAPIView):
     serializer_class = LendingSerializer
 
     def perform_update(self, serializer):
+        lending_object = Lending.objects.get(pk=self.kwargs['pk'])
+        if lending_object.date_return is not None:
+            raise ValidationError(
+                        "Книга возвращена читателем - повторный возврат невозможен !"
+                    )
         book_json_id = serializer.validated_data["book"].pk
         book_object = Books.objects.get(pk=book_json_id)
         book_object.quantity_lending -= 1
@@ -97,19 +102,13 @@ class LendingDestroyApiView(DestroyAPIView):
 
     def get_queryset(self):
         lending_object = Lending.objects.get(pk=self.kwargs['pk'])
+        if lending_object.date_return is not None:
+            raise ValidationError(
+                        "Книга возвращена читателем - удаление выдачи невозможно !"
+                    )
         book_object = Books.objects.get(pk=lending_object.book_id)
         book_object.quantity_lending -= 1
         book_object.save()
-            # if len(lending_object_list) == 1:
-            #     if self.kwargs['pk'] != self.request.user.id:
-            #         raise ValidationError(
-            #             "У вас недостаточно прав на просмтр учетных данных читателя !"
-            #         )
-            #     return Users.objects.filter(pk=self.request.user.id)
-            # else:
-            #     raise ValidationError(
-            #         "Такой читатель не зарегистрирован в библиотеке !"
-            #     )
         return Lending.objects.all()
     serializer_class = LendingSerializer
     permission_classes = [IsLibrarian]
