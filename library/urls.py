@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
@@ -23,10 +23,9 @@ schema_view = get_schema_view(
 app_name = LibraryConfig.name
 
 router_authors = SimpleRouter()
-router_authors.register(prefix="authors", viewset=AuthorsViewSet, basename="authors")
+router_authors.register("authors", AuthorsViewSet, basename="authors")
 router_books = SimpleRouter()
-router_books.register(prefix="books", viewset=BooksViewSet, basename="books")
-
+router_books.register("books", BooksViewSet, basename="books")
 
 urlpatterns = [
     path("lending/", LendingListApiView.as_view(), name="lending_list"),

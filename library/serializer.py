@@ -11,12 +11,17 @@ class AuthorsSerializer(ModelSerializer):
 
 
 class BooksSerializer(ModelSerializer):
+    author = AuthorsSerializer()
+
     class Meta:
         model = Books
         fields = "__all__"
 
 
 class LendingSerializer(ModelSerializer):
+    author = AuthorsSerializer()
+    books = BooksSerializer()
+
     class Meta:
         model = Lending
         fields = "__all__"
