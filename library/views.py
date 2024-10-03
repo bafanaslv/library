@@ -1,7 +1,7 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
 from rest_framework.exceptions import ValidationError
-from rest_framework.filters import OrderingFilter
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, DestroyAPIView, UpdateAPIView
 from library.models import Authors, Books, Lending
 from library.serializer import AuthorsSerializer, BooksSerializer, LendingSerializer
@@ -9,10 +9,12 @@ from users.permissions import IsLibrarian
 
 
 class AuthorsViewSet(viewsets.ModelViewSet):
+
     queryset = Authors.objects.all()
     serializer_class = AuthorsSerializer
 
     def get_permissions(self):
+        print(self.action)
         if self.action not in ["list", "retrieve"]:
             self.permission_classes = (IsLibrarian,)
         return super().get_permissions()
@@ -21,8 +23,9 @@ class AuthorsViewSet(viewsets.ModelViewSet):
 class BooksViewSet(viewsets.ModelViewSet):
     queryset = Books.objects.all()
     serializer_class = BooksSerializer
-    filter_backends = [OrderingFilter, DjangoFilterBackend,]
-    ordering_fields = ("author", "genre",)
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    ordering_fields = ("author", "genre", "name",)
+    search_fields = ("author", "name",)
     filterset_fields = ("author", "genre", "name",)
 
     def get_permissions(self):

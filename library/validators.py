@@ -8,7 +8,6 @@ class LibraryValidators:
         lending_dict = dict(value)  # конвертируем QuerySet в словарь
         if lending_dict["date_return"] is None:
             lending_objects_list = list(Lending.objects.filter(book_id=lending_dict["book"].pk, date_return=None))
-            print(lending_objects_list)
             for lending_objects in lending_objects_list:
                 if lending_objects.date_return is None:
                     raise ValidationError(
