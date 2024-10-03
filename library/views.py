@@ -1,18 +1,20 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
-from rest_framework.permissions import AllowAny
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, DestroyAPIView, UpdateAPIView
 from library.models import Authors, Books, Lending
+from library.paginations import AuthorsPaginator, BooksPaginator, LendingPaginator
 from library.serializer import AuthorsSerializer, BooksSerializer, LendingSerializer
 from users.permissions import IsLibrarian
 
 
 class AuthorsViewSet(viewsets.ModelViewSet):
 
-    queryset = Authors.objects.all()
+    queryset = Authors.objects.all().order_by('id')
     serializer_class = AuthorsSerializer
+    pagination_class = AuthorsPaginator
+
     filter_backends = [SearchFilter, OrderingFilter]
     ordering_fields = ("author",)
     search_fields = ("author",)
@@ -24,8 +26,10 @@ class AuthorsViewSet(viewsets.ModelViewSet):
 
 
 class BooksViewSet(viewsets.ModelViewSet):
-    queryset = Books.objects.all()
+    queryset = Books.objects.all().order_by('id')
     serializer_class = BooksSerializer
+    pagination_class = BooksPaginator
+
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     ordering_fields = ("author", "genre", "name",)
     search_fields = ("author", "name",)
@@ -40,11 +44,13 @@ class BooksViewSet(viewsets.ModelViewSet):
 class LendingListApiView(ListAPIView):
     def get_queryset(self):
         if IsLibrarian().has_permission(self.request, self):
-            return Lending.objects.all()
+            return Lending.objects.all().order_by('id')
         else:
             return Lending.objects.filter(user=self.request.user)
 
     serializer_class = LendingSerializer
+    pagination_class = LendingPaginator
+
     filter_backends = [OrderingFilter, DjangoFilterBackend,]
     ordering_fields = ("book",)
     filterset_fields = ("book", "date_return",)
