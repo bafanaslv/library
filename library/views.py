@@ -75,6 +75,7 @@ class LendingCreateApiView(CreateAPIView):
         book_object = Books.objects.get(pk=book_json_id)
         lending = serializer.save()
         book_object.quantity_lending += 1
+        book_object.amount_lending += 1
         book_object.save()
         lending.save()
 
@@ -111,6 +112,7 @@ class LendingUpdateApiView(UpdateAPIView):
         book_json_id = serializer.validated_data["book"].pk
         book_object = Books.objects.get(pk=book_json_id)
         book_object.quantity_lending -= 1
+        book_object.amount_lending -= 1
         book_object.save()
         lending = serializer.save()
         lending.save()

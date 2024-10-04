@@ -37,6 +37,7 @@ class Books(models.Model):
     barcode = models.PositiveIntegerField(verbose_name="штрихкод")
     quantity_all = models.PositiveIntegerField(verbose_name="всего в библиотеке")
     quantity_lending = models.PositiveIntegerField(verbose_name="выдано всего", default=0)
+    amount_lending = models.PositiveIntegerField(verbose_name="количество выдачи", default=0)
     image = models.ImageField(
         upload_to="books/media",
         verbose_name="обложка",

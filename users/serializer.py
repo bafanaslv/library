@@ -10,6 +10,12 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ("id", "reader_name", "email", "phone", "tg_chat_id")
 
 
+class UserSerializerReadOnly(serializers.ModelSerializer):
+    class Meta:
+        model = Users
+        fields = ("reader_name", "phone")
+
+
 class UserTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):

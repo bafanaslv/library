@@ -1,22 +1,29 @@
-from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.serializers import ModelSerializer
 from library.models import Authors, Books, Lending
 from library.validators import LibraryValidators
+from users.serializer import UserSerializerReadOnly
+
+
+class AuthorsSerializerReadOnly(ModelSerializer):
+
+    class Meta:
+        model = Authors
+        fields = ("author",)
 
 
 class AuthorsSerializer(ModelSerializer):
 
     class Meta:
         model = Authors
-        fields = "__all__"
+        fields = ("author",)
 
 
 class BooksSerializerReadOnly(ModelSerializer):
-    author = AuthorsSerializer(read_only=True)
+    author = AuthorsSerializerReadOnly(read_only=True)
 
     class Meta:
         model = Books
-        fields = "__all__"
+        fields = ("author", "name",)
 
 
 class BooksSerializer(ModelSerializer):
@@ -26,8 +33,7 @@ class BooksSerializer(ModelSerializer):
 
 
 class LendingSerializerReadOnly(ModelSerializer):
-    author = AuthorsSerializer(read_only=True)
-    books = BooksSerializer(read_only=True)
+    user = UserSerializerReadOnly(read_only=True)
 
     class Meta:
         model = Lending
