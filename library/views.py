@@ -5,7 +5,8 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, DestroyAPIView, UpdateAPIView
 from library.models import Authors, Books, Lending
 from library.paginations import AuthorsPaginator, BooksPaginator, LendingPaginator
-from library.serializer import AuthorsSerializer, BooksSerializer, LendingSerializer
+from library.serializer import AuthorsSerializer, BooksSerializer, BooksSerializerReadOnly, LendingSerializer, \
+    LendingSerializerReadOnly
 from users.permissions import IsLibrarian
 
 
@@ -27,8 +28,13 @@ class AuthorsViewSet(viewsets.ModelViewSet):
 
 class BooksViewSet(viewsets.ModelViewSet):
     queryset = Books.objects.all().order_by('id')
-    serializer_class = BooksSerializer
     pagination_class = BooksPaginator
+
+    def get_serializer_class(self):
+        if self.action in ('create', 'update', 'partial_update'):
+            return BooksSerializer
+        else:
+            return BooksSerializerReadOnly
 
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     ordering_fields = ("author", "genre", "name",)
@@ -48,7 +54,7 @@ class LendingListApiView(ListAPIView):
         else:
             return Lending.objects.filter(user=self.request.user)
 
-    serializer_class = LendingSerializer
+    serializer_class = LendingSerializerReadOnly
     pagination_class = LendingPaginator
 
     filter_backends = [OrderingFilter, DjangoFilterBackend,]
@@ -85,7 +91,7 @@ class LendingRetrieveApiView(RetrieveAPIView):
             return Lending.objects.filter(user=self.request.user)
 
     queryset = Lending.objects.all()
-    serializer_class = LendingSerializer
+    serializer_class = LendingSerializerReadOnly
 
 
 class LendingUpdateApiView(UpdateAPIView):

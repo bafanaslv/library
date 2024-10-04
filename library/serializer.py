@@ -11,20 +11,30 @@ class AuthorsSerializer(ModelSerializer):
         fields = "__all__"
 
 
-class BooksSerializer(ModelSerializer):
-
-    # author = AuthorsSerializer(read_only=True)
-    author = PrimaryKeyRelatedField(queryset=Authors.objects.all())
+class BooksSerializerReadOnly(ModelSerializer):
+    author = AuthorsSerializer(read_only=True)
 
     class Meta:
         model = Books
         fields = "__all__"
 
 
-class LendingSerializer(ModelSerializer):
-    author = AuthorsSerializer()
-    books = BooksSerializer()
+class BooksSerializer(ModelSerializer):
+    class Meta:
+        model = Books
+        fields = "__all__"
 
+
+class LendingSerializerReadOnly(ModelSerializer):
+    author = AuthorsSerializer(read_only=True)
+    books = BooksSerializer(read_only=True)
+
+    class Meta:
+        model = Lending
+        fields = "__all__"
+
+
+class LendingSerializer(ModelSerializer):
     class Meta:
         model = Lending
         fields = "__all__"
