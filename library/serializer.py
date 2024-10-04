@@ -1,3 +1,4 @@
+from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.serializers import ModelSerializer
 from library.models import Authors, Books, Lending
 from library.validators import LibraryValidators
@@ -11,7 +12,9 @@ class AuthorsSerializer(ModelSerializer):
 
 
 class BooksSerializer(ModelSerializer):
-    author = AuthorsSerializer()
+
+    # author = AuthorsSerializer(read_only=True)
+    author = PrimaryKeyRelatedField(queryset=Authors.objects.all())
 
     class Meta:
         model = Books

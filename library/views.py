@@ -33,7 +33,7 @@ class BooksViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     ordering_fields = ("author", "genre", "name",)
     search_fields = ("author", "name",)
-    filterset_fields = ("author", "genre", "name",)
+    filterset_fields = ("author", "genre", "name", "barcode")
 
     def get_permissions(self):
         if self.action not in ["list", "retrieve"]:
@@ -53,7 +53,7 @@ class LendingListApiView(ListAPIView):
 
     filter_backends = [OrderingFilter, DjangoFilterBackend,]
     ordering_fields = ("book",)
-    filterset_fields = ("book", "date_return",)
+    filterset_fields = ("user", "book", "date_return",)
 
 
 class LendingCreateApiView(CreateAPIView):
