@@ -133,9 +133,9 @@ CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL")
 CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND")
 CELERY_TIMEZONE = "Europe/Moscow"
 CELERY_BEAT_SCHEDULE = {
-    # Задача на блокировку неактивных пользователей
+    # Задача для предупреждения о необходимости возврата книги в библиотеку
     "check_last_login": {
-        "task": "courses.tasks.check_login",
+        "task": "library.tasks.send_mail_return_books",
         "schedule": timedelta(minutes=1),
     },
 }

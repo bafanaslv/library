@@ -10,15 +10,15 @@ from users.models import Users
 
 
 @shared_task
-def send_mail_update_course(course_id):
+def send_mail_return_books():
     """Функция отправки уведомлений при обновлении курса"""
     # Полученаем подписчиков
-    books = Lending.objects.all()
+    books = Lending.objects.filter(date_return=None)
     if books:
         for book in books:
             to_email = book.user.email
-            subject = "Обновления материалов курса"
-            message = "Курс обновлен"
+            subject = "Возврат книги"
+            message = "Вы должны вернуть книгу"
             send_mail(
                 subject=subject,
                 message=message,
