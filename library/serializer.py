@@ -1,4 +1,5 @@
-from rest_framework.fields import SerializerMethodField
+from rest_framework import serializers
+from rest_framework.fields import SerializerMethodField, CharField
 from rest_framework.serializers import ModelSerializer
 from library.models import Authors, Books, Lending
 from library.validators import LibraryValidators
@@ -19,7 +20,7 @@ class AuthorsSerializer(ModelSerializer):
         fields = "__all__"
 
 
-class BooksSerializerReadOnly(ModelSerializer):
+class BooksSerializerReadOnly(serializers.ModelSerializer):
     author = AuthorsSerializerReadOnly(read_only=True)
 
     class Meta:
