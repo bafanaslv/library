@@ -1,0 +1,70 @@
+services:
+  redis:
+    image: redis:latest
+    restart: on-failure
+    expose:
+      - "6379"
+    healthcheck:
+      test: redis-cli ping
+
+  db:
+    image: postgres:latest
+    restart: on-failure
+    env_file:
+      - .env
+    expose:
+      - "5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data/
+    healthcheck:
+      test: ["CMD-SHELL","-c","pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
+      interval: 10s
+      retries: 5
+      timeout: 5s
+
+  app:
+    build: .
+    tty: true
+    ports:
+      - "8000:8000"
+    environment:
+      - POETRY_VIRTUALENVS_CREATE=false
+    command: poetry run sh -c "python manage.py migrate && python manage.py csu && python manage.py runserver 0.0.0.0:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+
+  celery:
+    build: .
+    tty: true
+    command: celery -A config worker -l INFO
+    restart: on-failure
+    depends_on:
+      - redis
+      - db
+      - app
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+
+  celery-beat:
+    build: .
+    tty: true
+    command: celery -A config beat -l INFO
+    restart: on-failure
+    depends_on:
+      - redis
+      - db
+      - app
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+
+volumes:
+  pg_data:
