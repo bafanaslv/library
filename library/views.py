@@ -59,7 +59,7 @@ class LendingListApiView(ListAPIView):
 
     filter_backends = [OrderingFilter, DjangoFilterBackend,]
     ordering_fields = ("book",)
-    filterset_fields = ("user", "book", "date_return",)
+    filterset_fields = ("user", "book", "date_event",)
 
 
 class LendingCreateApiView(CreateAPIView):
@@ -71,14 +71,30 @@ class LendingCreateApiView(CreateAPIView):
     serializer_class = LendingSerializer
 
     def perform_create(self, serializer):
-        book_json_id = serializer.validated_data["book"].pk
-        book_object = Books.objects.get(pk=book_json_id)
+        operation = serializer.validated_data["operation"]
+        book_id = serializer.validated_data["book"].pk
+        book_name = serializer.validated_data["book"].name
+        quantity = serializer.validated_data["arrival_quantity"]
+        book_object = Books.objects.get(pk=book_id)
         lending = serializer.save()
-        book_object.quantity_lending += 1
-        book_object.amount_lending += 1
+        if operation == "arrival":
+            if serializer.validated_data["user"].pk != self.request.user.id:
+                raise ValidationError(
+                    f"У читателя '{serializer.validated_data["user"].reader_name}' отсуствуют права на регистрацию поступления книг !"
+                )
+            book_object.quantity_all += quantity
+        elif operation == "issuance":
+            book_object.quantity_lending += 1
+            book_object.amount_lending += 1
+        elif operation == "return":
+            book_object.quantity_lending -= 1
+        elif operation == "write_off":
+            book_object.quantity_all -= 1
+        elif operation == "loss":
+            print(f"Книга {book_name} утеряна, необходимо провести списание книги.")
+
         book_object.save()
         lending.save()
-
     permission_classes = [IsLibrarian]
 
 
@@ -105,7 +121,7 @@ class LendingUpdateApiView(UpdateAPIView):
 
     def perform_update(self, serializer):
         lending_object = Lending.objects.get(pk=self.kwargs['pk'])
-        if lending_object.date_return is not None:
+        if lending_object.date_event is not None:
             raise ValidationError(
                         "Книга возвращена читателем - повторный возврат невозможен !"
                     )
@@ -125,7 +141,7 @@ class LendingDestroyApiView(DestroyAPIView):
 
     def get_queryset(self):
         lending_object = Lending.objects.get(pk=self.kwargs['pk'])
-        if lending_object.date_return is not None:
+        if lending_object.date_event is not None:
             raise ValidationError(
                         "Книга возвращена читателем - удаление выдачи невозможно !"
                     )

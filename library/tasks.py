@@ -19,7 +19,7 @@ def send_mail_return_books():
     zone = pytz.timezone(settings.CELERY_TIMEZONE)
     today = datetime.now(zone).date()  # текущее дата_время
 
-    books_for_return = Lending.objects.filter(date_return=None)
+    books_for_return = Lending.objects.filter(date_event=None)
     if books_for_return:
         message = ''
         for book_for_return in books_for_return:

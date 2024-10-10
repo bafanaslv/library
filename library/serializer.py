@@ -1,8 +1,10 @@
 from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField, CharField
+from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.serializers import ModelSerializer
 from library.models import Authors, Books, Lending
 from library.validators import LibraryValidators
+from users.models import Users
 from users.serializer import UserSerializerReadOnly
 
 
@@ -31,7 +33,7 @@ class BooksSerializerReadOnly(serializers.ModelSerializer):
 class BooksSerializer(ModelSerializer):
     class Meta:
         model = Books
-        fields = "__all__"
+        fields = ("author", "name", "genre",)
 
 
 class LendingSerializerReadOnly(ModelSerializer):
@@ -43,7 +45,8 @@ class LendingSerializerReadOnly(ModelSerializer):
 
 
 class LendingSerializer(ModelSerializer):
+
     class Meta:
         model = Lending
-        fields = "__all__"
+        fields = ("user", "book", "operation", "date_event", "arrival_quantity",)
         validators = [LibraryValidators()]

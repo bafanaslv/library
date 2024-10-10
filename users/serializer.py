@@ -7,7 +7,7 @@ from users.models import Users
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = Users
-        fields = ("id", "reader_name", "email", "phone", "tg_chat_id")
+        fields = ("id", "reader_name", "email", "phone", "is_personal_data", "tg_chat_id")
 
 
 class UserSerializerReadOnly(serializers.ModelSerializer):

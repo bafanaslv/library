@@ -6,8 +6,7 @@ NULLABLE = {"blank": True, "null": True}
 
 
 class Authors(models.Model):
-    isni = models.CharField(max_length=16, unique=True, verbose_name="ISNI")
-    author = models.CharField(max_length=150, verbose_name="имя (псевдоним) автора")
+    author = models.CharField(max_length=150, unique=True, verbose_name="имя (псевдоним) автора")
     image = models.ImageField(
         upload_to="authors/media",
         verbose_name="изображение",
@@ -27,15 +26,14 @@ class Books(models.Model):
     GENRE = [("adventures", "приключения"), ("fantasy", "фантастика"),
                   ("story", "рассказ"), ("novel", "повесть"), ("poetry", "поэзия")]
 
-    isbn = models.CharField(max_length=17, unique=True, verbose_name="ISBN")
-    name = models.CharField(max_length=150, verbose_name="название книги")
+    name = models.CharField(max_length=150, unique=True, verbose_name="название книги")
     author = models.ForeignKey(
         Authors, related_name="book_author", on_delete=models.PROTECT, verbose_name="автор"
     )
     genre = models.CharField(max_length=20, choices=GENRE, verbose_name="жанр", default="story")
     annotation = models.TextField(verbose_name="аннотация", **NULLABLE)
-    barcode = models.PositiveIntegerField(verbose_name="штрихкод")
-    quantity_all = models.PositiveIntegerField(verbose_name="всего в библиотеке")
+    barcode = models.PositiveIntegerField(verbose_name="штрихкод", **NULLABLE)
+    quantity_all = models.PositiveIntegerField(verbose_name="всего в библиотеке", default=0)
     quantity_lending = models.PositiveIntegerField(verbose_name="выдано всего", default=0)
     amount_lending = models.PositiveIntegerField(verbose_name="количество выдачи", default=0)
     image = models.ImageField(
@@ -54,7 +52,7 @@ class Books(models.Model):
 
 
 class Lending(models.Model):
-    OPERATION = [("arrival", "поступление"), ("issuance", "выдача"), ("return", "возврат"), ("write-off", "списание")]
+    OPERATION = [("arrival", "поступление"), ("issuance", "выдача"), ("return", "возврат"), ("loss", "утеря"), ("write_off", "списание")]
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -70,6 +68,9 @@ class Lending(models.Model):
     )
     operation = models.CharField(max_length=20, choices=OPERATION, verbose_name="операция", default="issuance")
     date_event = models.DateField(verbose_name="дата", default=date.today)
+
+    id_return = models.BooleanField(verbose_name="признак возврата", default=False)
+    arrival_quantity = models.IntegerField(verbose_name="Количество поступивших книг.", **NULLABLE)
 
     def __str__(self):
         return f"{self.user} : {self.book}"
