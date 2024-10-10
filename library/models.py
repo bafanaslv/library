@@ -33,7 +33,7 @@ class Books(models.Model):
         Authors, related_name="book_author", on_delete=models.PROTECT, verbose_name="автор"
     )
     genre = models.CharField(max_length=20, choices=GENRE, verbose_name="жанр", default="story")
-    description = models.TextField(verbose_name="описание", **NULLABLE)
+    annotation = models.TextField(verbose_name="аннотация", **NULLABLE)
     barcode = models.PositiveIntegerField(verbose_name="штрихкод")
     quantity_all = models.PositiveIntegerField(verbose_name="всего в библиотеке")
     quantity_lending = models.PositiveIntegerField(verbose_name="выдано всего", default=0)
@@ -54,6 +54,8 @@ class Books(models.Model):
 
 
 class Lending(models.Model):
+    OPERATION = [("arrival", "поступление"), ("issuance", "выдача"), ("return", "возврат"), ("write-off", "списание")]
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
@@ -66,9 +68,8 @@ class Lending(models.Model):
         verbose_name="книга",
         related_name="lending_book",
     )
-    date_lending = models.DateField(verbose_name="дата выдачи", default=date.today)
-    days = models.PositiveIntegerField(verbose_name="количество дней", default=10)
-    date_return = models.DateField(verbose_name="дата возврата фактическая", **NULLABLE)
+    operation = models.CharField(max_length=20, choices=OPERATION, verbose_name="операция", default="issuance")
+    date_event = models.DateField(verbose_name="дата", default=date.today)
 
     def __str__(self):
         return f"{self.user} : {self.book}"
