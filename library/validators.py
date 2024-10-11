@@ -6,6 +6,7 @@ from library.models import Lending, Books
 class LibraryValidators:
     def __call__(self, value):
         lending_dict = dict(value)  # конвертируем QuerySet в словарь
+        print(lending_dict["operation"])
 
         if lending_dict["operation"] == "issuance":
             lending_objects_list = list(Lending.objects.filter(book_id=lending_dict["book"].pk, date_event=None))
@@ -24,4 +25,11 @@ class LibraryValidators:
             elif book_object.quantity_all == book_object.quantity_lending:
                 raise ValidationError(
                         f"Все книги '{book_object.name}' выданы читателям !"
+                    )
+
+        if lending_dict["operation"] == "arrival":
+            book_object = Books.objects.get(pk=lending_dict["book"].pk)
+            if book_object.quantity_all < book_object.quantity_lending:
+                raise ValidationError(
+                        f"Количество выданных книг '{book_object.name}' превышает их общее количество !"
                     )

@@ -76,12 +76,8 @@ class LendingCreateApiView(CreateAPIView):
         book_name = serializer.validated_data["book"].name
         quantity = serializer.validated_data["arrival_quantity"]
         book_object = Books.objects.get(pk=book_id)
-        lending = serializer.save()
         if operation == "arrival":
-            if serializer.validated_data["user"].pk != self.request.user.id:
-                raise ValidationError(
-                    f"У читателя '{serializer.validated_data["user"].reader_name}' отсуствуют права на регистрацию поступления книг !"
-                )
+            serializer.validated_data["user"].pk = self.request.user.id
             book_object.quantity_all += quantity
         elif operation == "issuance":
             book_object.quantity_lending += 1
@@ -89,17 +85,35 @@ class LendingCreateApiView(CreateAPIView):
         elif operation == "return":
             book_object.quantity_lending -= 1
         elif operation == "write_off":
+            serializer.validated_data["user"].pk = self.request.user.id
             book_object.quantity_all -= 1
         elif operation == "loss":
+            serializer.validated_data["user"].pk = self.request.user.id
             print(f"Книга {book_name} утеряна, необходимо провести списание книги.")
 
+        lending = serializer.save()
         book_object.save()
         lending.save()
     permission_classes = [IsLibrarian]
 
 
+class LendingDestroyApiView(DestroyAPIView):
+    """Удалять могут авторизованный пользователь, который является владельцем и не модератором."""
+
+    def get_queryset(self):
+        lending_object = Lending.objects.get(pk=self.kwargs['pk'])
+        book_object = Books.objects.get(pk=lending_object.book_id)
+        if lending_object.operation == "arrival":
+            book_object.quantity_all -= lending_object.arrival_quantity
+        book_object.save()
+        return Lending.objects.all()
+
+    serializer_class = LendingSerializer
+    permission_classes = [IsLibrarian]
+
+
 class LendingRetrieveApiView(RetrieveAPIView):
-    """Просматривать отдельного могут авторизованный пользователь, который является владельцем или модератором."""
+    """Просматривать отдельную операцию могут авторизованный пользователь, который является владельцем или модератором."""
 
     def get_queryset(self):
         if IsLibrarian().has_permission(self.request, self):
@@ -133,21 +147,4 @@ class LendingUpdateApiView(UpdateAPIView):
         lending = serializer.save()
         lending.save()
 
-    permission_classes = [IsLibrarian]
-
-
-class LendingDestroyApiView(DestroyAPIView):
-    """Удалять могут авторизованный пользователь, который является владельцем и не модератором."""
-
-    def get_queryset(self):
-        lending_object = Lending.objects.get(pk=self.kwargs['pk'])
-        if lending_object.date_event is not None:
-            raise ValidationError(
-                        "Книга возвращена читателем - удаление выдачи невозможно !"
-                    )
-        book_object = Books.objects.get(pk=lending_object.book_id)
-        book_object.quantity_lending -= 1
-        book_object.save()
-        return Lending.objects.all()
-    serializer_class = LendingSerializer
     permission_classes = [IsLibrarian]
