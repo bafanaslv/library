@@ -19,17 +19,17 @@ def send_mail_return_books():
     zone = pytz.timezone(settings.CELERY_TIMEZONE)
     today = datetime.now(zone).date()  # текущее дата_время
 
-    books_for_return = Lending.objects.filter(date_event=None)
+    books_for_return = Lending.objects.filter(operation="issuance", id_return=0)
     if books_for_return:
         message = ''
         for book_for_return in books_for_return:
-            if today > book_for_return.date_lending + timedelta(days=10):
+            if today > book_for_return.date_event + timedelta(days=10):
                 message = f"Вы должны немедленно вернуть книгу {book_for_return.book.name}"
-            elif today == book_for_return.date_lending + timedelta(days=10):
+            elif today == book_for_return.date_event + timedelta(days=10):
                 message = f"Вы сегодня должны вернуть книгу {book_for_return.book.name}"
             else:
-                if today == book_for_return.date_lending + timedelta(days=7):
-                    message = f"Вы должны вернуть книгу {book_for_return.book.name} {book_for_return.date_lending + timedelta(days=10)}"
+                if today == book_for_return.date_event + timedelta(days=7):
+                    message = f"Вы должны вернуть книгу {book_for_return.book.name} {book_for_return.date_event + timedelta(days=10)}"
 
             if message:
                 user_tg = book_for_return.user.tg_chat_id  # telegram chat bott id
