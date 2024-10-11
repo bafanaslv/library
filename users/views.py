@@ -16,7 +16,8 @@ from users.serializer import UserSerializer, UserTokenObtainPairSerializer
 class UserListAPIView(ListAPIView):
     serializer_class = UserSerializer
     queryset = Users.objects.all()
-    permission_classes = [IsAuthenticated, IsLibrarian]
+    # permission_classes = [IsAuthenticated, IsLibrarian]
+    permission_classes = [IsLibrarian]
 
 
 class UserRetrieveAPIView(RetrieveAPIView):
