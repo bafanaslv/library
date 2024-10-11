@@ -1,3 +1,6 @@
+# В проекте четыре модели Users - пользователи библиотеки, Authors - авторы книг, Books - книги.
+# Lendings - операции по библиотеке (поступление, выдача читетелю, возврат в библиотеку, списание книги, утеря книги).
+
 from datetime import date
 from django.db import models
 from config import settings

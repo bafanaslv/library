@@ -1,10 +1,7 @@
 from rest_framework import serializers
-from rest_framework.fields import SerializerMethodField, CharField
-from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.serializers import ModelSerializer
 from library.models import Authors, Books, Lending
 from library.validators import LibraryValidators
-from users.models import Users
 from users.serializer import UserSerializerReadOnly
 
 
