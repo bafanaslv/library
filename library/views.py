@@ -72,17 +72,26 @@ class LendingCreateApiView(CreateAPIView):
 
     def perform_create(self, serializer):
         operation = serializer.validated_data["operation"]
-        book_id = serializer.validated_data["book"].pk
+        book_return_id = serializer.validated_data["book"].pk
+        book_user_id = serializer.validated_data["user"].pk
         book_name = serializer.validated_data["book"].name
-        quantity = serializer.validated_data["arrival_quantity"]
-        book_object = Books.objects.get(pk=book_id)
+        book_object = Books.objects.get(pk=book_return_id)
         if operation == "arrival":
             serializer.validated_data["user"].pk = self.request.user.id
+            quantity = serializer.validated_data["arrival_quantity"]
             book_object.quantity_all += quantity
         elif operation == "issuance":
             book_object.quantity_lending += 1
             book_object.amount_lending += 1
         elif operation == "return":
+            lending_object_list = list(Lending.objects.filter(user_id=book_user_id, operation="issuance",
+                                    book_id=book_return_id, id_return=0))
+            if len(lending_object_list) == 0:
+                raise ValidationError(
+                        f"Книга '{book_object.name}' уже возвращена !"
+                    )
+            lending_object_id = lending_object_list[0].pk
+            lending_object = Lending.objects.get(pk=lending_object_id)
             book_object.quantity_lending -= 1
         elif operation == "write_off":
             serializer.validated_data["user"].pk = self.request.user.id
@@ -94,6 +103,9 @@ class LendingCreateApiView(CreateAPIView):
         lending = serializer.save()
         book_object.save()
         lending.save()
+        if operation == "return":
+            lending_object.id_return = lending.id
+            lending_object.save()
     permission_classes = [IsLibrarian]
 
 
@@ -104,12 +116,30 @@ class LendingDestroyApiView(DestroyAPIView):
         lending_object = Lending.objects.get(pk=self.kwargs['pk'])
         book_object = Books.objects.get(pk=lending_object.book_id)
         if lending_object.operation == "arrival":
+            if book_object.quantity_all - book_object.quantity_lending < lending_object.arrival_quantity:
+                raise ValidationError(
+                        f"Количество выданных книг '{book_object.name}' превысит их общее количество ! Удаление поступления невозможно !"
+                    )
             book_object.quantity_all -= lending_object.arrival_quantity
+        elif lending_object.operation == "issuance":
+            if lending_object.id_return > 0:
+                raise ValidationError(
+                    f"Невоможно удалить выдачу книги '{book_object.name}' - она возвращена !"
+                )
+            book_object.quantity_lending -= 1
+            book_object.amount_lending -= 1
+        elif lending_object.operation == "write_off":
+            book_object.quantity_all += 1
+        if lending_object.operation == "return":
+            lending_issuance_object = Lending.objects.get(id_return=lending_object.pk)
+            lending_issuance_object.id_return = 0
+            lending_issuance_object.save()
+            book_object.quantity_lending += 1
         book_object.save()
         return Lending.objects.all()
 
-    serializer_class = LendingSerializer
     permission_classes = [IsLibrarian]
+    serializer_class = LendingSerializer
 
 
 class LendingRetrieveApiView(RetrieveAPIView):

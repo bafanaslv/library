@@ -69,7 +69,7 @@ class Lending(models.Model):
     operation = models.CharField(max_length=20, choices=OPERATION, verbose_name="операция", default="issuance")
     date_event = models.DateField(verbose_name="дата", default=date.today)
 
-    id_return = models.BooleanField(verbose_name="признак возврата", default=False)
+    id_return = models.IntegerField(verbose_name="id возврата", default=0)
     arrival_quantity = models.IntegerField(verbose_name="Количество поступивших книг.", **NULLABLE)
 
     def __str__(self):

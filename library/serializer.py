@@ -48,5 +48,5 @@ class LendingSerializer(ModelSerializer):
 
     class Meta:
         model = Lending
-        fields = ("user", "book", "operation", "date_event", "arrival_quantity",)
+        fields = "__all__"
         validators = [LibraryValidators()]
