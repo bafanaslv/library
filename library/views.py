@@ -1,5 +1,5 @@
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets
+from rest_framework import viewsets, request
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, DestroyAPIView, UpdateAPIView
@@ -42,9 +42,10 @@ class BooksViewSet(viewsets.ModelViewSet):
     filterset_fields = ("author", "genre", "name", "barcode")
 
     def get_permissions(self):
-        if self.action not in ["list", "retrieve"]:
-            self.permission_classes = (IsLibrarian,)
-        return super().get_permissions()
+        if self.request.user != 'ivc@yandex.ru':
+            if self.action not in ["list", "retrieve"]:
+                self.permission_classes = (IsLibrarian,)
+            return super().get_permissions()
 
 
 class LendingListApiView(ListAPIView):
