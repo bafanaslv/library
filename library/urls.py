@@ -22,10 +22,10 @@ schema_view = get_schema_view(
 
 app_name = LibraryConfig.name
 
-router_authors = SimpleRouter()
-router_authors.register("authors", AuthorsViewSet, basename="authors")
-router_books = SimpleRouter()
-router_books.register("books", BooksViewSet, basename="books")
+# router_authors = SimpleRouter()
+# router_authors.register("authors", AuthorsViewSet, basename="authors")
+# router_books = SimpleRouter()
+# router_books.register("books", BooksViewSet, basename="books")
 
 urlpatterns = [
     path("lending/", LendingListApiView.as_view(), name="lending_list"),
@@ -34,5 +34,5 @@ urlpatterns = [
     path("lending/update/<int:pk>/", LendingUpdateApiView.as_view(), name="lending_update"),
     path("lending/delete/<int:pk>/", LendingDestroyApiView.as_view(), name="lending_delete"),
 ]
-urlpatterns += router_books.urls
-urlpatterns += router_authors.urls
+# urlpatterns += router_books.urls
+# urlpatterns += router_authors.urls

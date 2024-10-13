@@ -3,6 +3,8 @@ from rest_framework import viewsets, request
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, DestroyAPIView, UpdateAPIView
+from rest_framework.permissions import AllowAny, IsAuthenticated
+
 from library.models import Authors, Books, Lending
 from library.paginations import AuthorsPaginator, BooksPaginator, LendingPaginator
 from library.serializer import AuthorsSerializer, BooksSerializer, BooksSerializerReadOnly, LendingSerializer, \
@@ -22,7 +24,9 @@ class AuthorsViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action not in ["list", "retrieve"]:
-            self.permission_classes = (IsLibrarian,)
+            self.permission_classes = (IsLibrarian, IsAuthenticated,)
+        else:
+            self.permission_classes = (IsAuthenticated,)
         return super().get_permissions()
 
 
@@ -42,10 +46,11 @@ class BooksViewSet(viewsets.ModelViewSet):
     filterset_fields = ("author", "genre", "name", "barcode")
 
     def get_permissions(self):
-        if self.request.user != 'ivc@yandex.ru':
-            if self.action not in ["list", "retrieve"]:
-                self.permission_classes = (IsLibrarian,)
-            return super().get_permissions()
+        if self.action not in ["list", "retrieve"]:
+            self.permission_classes = (IsLibrarian, IsAuthenticated,)
+        else:
+            self.permission_classes = (IsAuthenticated,)
+        return super().get_permissions()
 
 
 class LendingListApiView(ListAPIView):
