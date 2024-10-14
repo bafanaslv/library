@@ -110,7 +110,7 @@ class LendingListApiView(ListAPIView):
         "book",
         "date_event",
         "operation",
-        "is_returned",
+        "is_return",
         "is_loss",
         "is_write_off",
     )
@@ -296,16 +296,22 @@ class LendingUpdateApiView(UpdateAPIView):
         lending_object = Lending.objects.get(
             pk=self.kwargs["pk"]
         )  # изменяемая операция
-        if (
-            lending_object.operation == "issuance"
-            and lending_object.is_loss
-            and not lending_object.is_write_off
-        ):
-            lending = serializer.save()
-            lending.save()
-        else:
-            raise ValidationError(
-                f"Можно списать только утерянную и не списанную книгу."
-            )
+        if lending_object.operation == "issuance" and lending_object.is_loss:
+            if lending_object.is_write_off:
+                if not lending_object.is_write_off:
+                    lending = serializer.save()
+                    lending.save()
+                else:
+                    raise ValidationError(
+                        f"Можно списать только утерянную и не списанную книгу."
+                    )
+            if not lending_object.is_write_off:
+                if lending_object.is_write_off:
+                    lending = serializer.save()
+                    lending.save()
+                else:
+                    raise ValidationError(
+                        f"Списание уже отменено."
+                    )
 
     permission_classes = [IsLibrarian]
