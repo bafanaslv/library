@@ -163,9 +163,15 @@ class LendingDestroyApiView(DestroyAPIView):
             # удаление выдачи книги
             # удаление невозможно если операция помечена возвратом (id_return - id операции возрата книги)
             if lending_object.id_return > 0:
-                raise ValidationError(
-                    f"Невоможно удалить выдачу книги '{book_object.name}' - она возвращена !"
-                )
+                if lending_object.is_return > 0:
+                    raise ValidationError(
+                        f"Невоможно удалить выдачу книги '{book_object.name}' - она возвращена или утеряна!"
+                    )
+                else:
+                    raise ValidationError(
+                        f"Невоможно удалить выдачу книги '{book_object.name}' - она утеряна!"
+                    )
+
             # при возврате книг меньшается количество выданных с данным названием книг (quantity_lending)
             # и общее количество выдачи (amount_lending)
             book_object.quantity_lending -= 1
@@ -183,8 +189,13 @@ class LendingDestroyApiView(DestroyAPIView):
             book_object.quantity_lending += 1
         if lending_object.operation == "loss":
             # далее в БД ищется операция выдачи книги и улаляется пометка об утере (id_return = 0, is_loss = False)
-            # общее количество книги в библиотеке увеличивается на 1
+            # невозможно выполнить эту операцию если книга после утери списана.
+            # при удалении операции потери общее количество книги в библиотеке увеличивается на 1 (quantity_all += 1)
             lending_issuance_object = Lending.objects.get(id_return=lending_object.pk)
+            if lending_issuance_object.is_write_off:
+                raise ValidationError(
+                    f"Невоможно удалить утерю - книга '{book_object.name}' списана !"
+                )
             lending_issuance_object.id_return = 0
             lending_issuance_object.is_loss = False
             lending_issuance_object.save()
@@ -210,15 +221,16 @@ class LendingRetrieveApiView(RetrieveAPIView):
 
 
 class LendingUpdateApiView(UpdateAPIView):
-    """Измененя производятся только для списания утерянной книги."""
+    """Изменения производятся только для списания утерянной книги."""
 
     queryset = Lending.objects.all()
     serializer_class = LendingSerializerWriteOff
 
     def perform_update(self, serializer):
-        """Перед сохраннием привычки проверяем не ссылается связанная привычка на саму себя."""
-        lending = serializer.save()
-        if lending.operation == "issuance" and lending.is_loss and not lending.is_write_off:
+        """Перед сохраннием операции проверяем действительно ли она утеряна и не списана ли книга."""
+        lending_object = Lending.objects.get(pk=self.kwargs['pk'])  # изменяемая операция
+        if lending_object.operation == "issuance" and lending_object.is_loss and not lending_object.is_write_off:
+            lending = serializer.save()
             lending.save()
         else:
             raise ValidationError(

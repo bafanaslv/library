@@ -53,5 +53,5 @@ class LendingSerializerWriteOff(ModelSerializer):
     """Данный сериализатор предназначен для списания утерянной книги."""
     class Meta:
         model = Lending
-        fields = ("id", "is_write_off",)
-        validators = [LibraryValidators()]
+        fields = ("is_write_off",)
+

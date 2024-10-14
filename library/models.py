@@ -79,7 +79,7 @@ class Lending(models.Model):
     arrival_quantity = models.IntegerField(verbose_name="Количество поступивших книг.", **NULLABLE)
 
     def __str__(self):
-        return f"{self.user} : {self.book}"
+        return f"{self.user} : {self.book} - {self.operation}"
 
     class Meta:
         verbose_name = "выдача"
