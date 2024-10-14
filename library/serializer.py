@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
+
 from library.models import Authors, Books, Lending
 from library.validators import LibraryValidators
 from users.serializer import UserSerializerReadOnly
@@ -9,7 +10,10 @@ class AuthorsSerializerReadOnly(ModelSerializer):
 
     class Meta:
         model = Authors
-        fields = ("id", "author",)
+        fields = (
+            "id",
+            "author",
+        )
 
 
 class AuthorsSerializer(ModelSerializer):
@@ -24,13 +28,21 @@ class BooksSerializerReadOnly(serializers.ModelSerializer):
 
     class Meta:
         model = Books
-        fields = ("id", "author", "name",)
+        fields = (
+            "id",
+            "author",
+            "name",
+        )
 
 
 class BooksSerializer(ModelSerializer):
     class Meta:
         model = Books
-        fields = ("author", "name", "genre",)
+        fields = (
+            "author",
+            "name",
+            "genre",
+        )
 
 
 class LendingSerializerReadOnly(ModelSerializer):
@@ -51,7 +63,7 @@ class LendingSerializer(ModelSerializer):
 
 class LendingSerializerWriteOff(ModelSerializer):
     """Данный сериализатор предназначен для списания утерянной книги."""
+
     class Meta:
         model = Lending
         fields = ("is_write_off",)
-

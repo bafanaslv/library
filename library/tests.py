@@ -1,10 +1,10 @@
+from django.contrib.auth.models import Group
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from library.models import Authors, Books, Lending
 from users.models import Users
-from django.contrib.auth.models import Group
 
 
 class AuthorsTestCase(APITestCase):
@@ -16,11 +16,9 @@ class AuthorsTestCase(APITestCase):
             password="123qwe",
             is_superuser=True,
         )
-        group = Group.objects.create(name='librarian')
+        group = Group.objects.create(name="librarian")
         group.user_set.add(self.user)
-        self.author = Authors.objects.create(
-            author="Джек Лондон"
-        )
+        self.author = Authors.objects.create(author="Джек Лондон")
         self.client.force_authenticate(user=self.user)
 
     def test_author_list(self):
@@ -70,11 +68,9 @@ class BooksTestCase(APITestCase):
             password="123qwe",
             is_superuser=True,
         )
-        group = Group.objects.create(name='librarian')
+        group = Group.objects.create(name="librarian")
         group.user_set.add(self.user)
-        self.author = Authors.objects.create(
-            author="Джек Лондон"
-        )
+        self.author = Authors.objects.create(author="Джек Лондон")
         self.book = Books.objects.create(
             name="Любовь к жизни",
             genre="story",
@@ -97,7 +93,6 @@ class BooksTestCase(APITestCase):
         self.assertEqual(data.get("name"), self.book.name)
 
     def test_book_create(self):
-        print(self.author)
         url = reverse("books-list")
         data = {
             "name": "Костер",
@@ -126,8 +121,8 @@ class BooksTestCase(APITestCase):
         self.assertEqual(Books.objects.all().count(), 0)
 
 
-class LibraryTestCase(APITestCase):
-    """Тестирование CRUD работы библиотеки."""
+class LibraryCreateTestCase(APITestCase):
+    """Тестирование работы библиотеки."""
 
     def setUp(self):
         self.user = Users.objects.create(
@@ -135,11 +130,9 @@ class LibraryTestCase(APITestCase):
             password="123qwe",
             is_superuser=True,
         )
-        group = Group.objects.create(name='librarian')
+        group = Group.objects.create(name="librarian")
         group.user_set.add(self.user)
-        self.author = Authors.objects.create(
-            author="Джек Лондон"
-        )
+        self.author = Authors.objects.create(author="Джек Лондон")
         self.book = Books.objects.create(
             name="Любовь к жизни",
             genre="story",
@@ -167,42 +160,257 @@ class LibraryTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(data.get("operation"), self.lending.operation)
 
-    def test_lending_create_issuance(self):
+    def test_lending_create_arrival(self):
+        """Тест поступления партии книги в библиотеку."""
         url = reverse("library:lending_create")
         data = {
             "user": self.user.pk,
             "book": self.book.pk,
             "operation": "arrival",
-            "arrival_quantity": 2
+            "arrival_quantity": 1,
         }
         response = self.client.post(url, data)
+        # print(response.json())
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Lending.objects.all().count(), 2)
+
+    def test_lending_create_issuance(self):
+        """Тест выдачи книги читателю."""
+        url = reverse("library:lending_create")
+        data = {
+            "user": self.user.pk,
+            "book": self.book.pk,
+            "operation": "arrival",
+            "arrival_quantity": 1,
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = {
             "user": self.user.pk,
             "book": self.book.pk,
             "operation": "issuance",
         }
         response = self.client.post(url, data)
-        # print(response.json())
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Lending.objects.all().count(), 3)
 
-    # def test_lending_update(self):
-    #     url = reverse("library:lending_update", args=(self.lending.pk,))
-    #     data = {
-    #         "user": self.user.pk,
-    #         "book": self.book.pk,
-    #         "operation": "issuance",
-    #     }
-    #     response = self.client.patch(url, data)
-    #     print(response.json())
-    #     data = response.json()
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
-    #     self.assertEqual(data.get("operation"), "issuance")
+    def test_lending_create_return(self):
+        """Тест возврата книги в библиотеку."""
+        url = reverse("library:lending_create")
+        data = {
+            "user": self.user.pk,
+            "book": self.book.pk,
+            "operation": "arrival",
+            "arrival_quantity": 1,
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        data = {
+            "user": self.user.pk,
+            "book": self.book.pk,
+            "operation": "issuance",
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        data = {
+            "user": self.user.pk,
+            "book": self.book.pk,
+            "operation": "return",
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Lending.objects.all().count(), 4)
 
-    # def test_lending_delete(self):
-    #     url = reverse("library:lending_delete", args=(self.lending.pk,))
-    #     response = self.client.delete(url)
-    #     print(response.json())
-    #     self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-    #     self.assertEqual(Lending.objects.all().count(), 2)
+    def test_lending_create_loss(self):
+        """Тест утери выданной читателю книги."""
+        url = reverse("library:lending_create")
+        data = {
+            "user": self.user.pk,
+            "book": self.book.pk,
+            "operation": "arrival",
+            "arrival_quantity": 1,
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        data = {
+            "user": self.user.pk,
+            "book": self.book.pk,
+            "operation": "issuance",
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        data = {
+            "user": self.user.pk,
+            "book": self.book.pk,
+            "operation": "loss",
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Lending.objects.all().count(), 4)
 
+    def test_lending_create_write_off(self):
+        """Тест списания физически изношенной книги."""
+        url = reverse("library:lending_create")
+        data = {
+            "user": self.user.pk,
+            "book": self.book.pk,
+            "operation": "arrival",
+            "arrival_quantity": 1,
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        data = {
+            "user": self.user.pk,
+            "book": self.book.pk,
+            "operation": "write_off",
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Lending.objects.all().count(), 3)
+
+    class LibraryDeleteTestCase(APITestCase):
+        """Тестирование работы библиотеки (отмена операций)."""
+
+        def setUp(self):
+            self.user = Users.objects.create(
+                email="ivc@yandex.ru",
+                password="123qwe",
+                is_superuser=True,
+            )
+            group = Group.objects.create(name="librarian")
+            group.user_set.add(self.user)
+            self.author = Authors.objects.create(author="Джек Лондон")
+            self.book = Books.objects.create(
+                name="Любовь к жизни",
+                genre="story",
+                barcode="1111111111",
+                author=self.author,
+            )
+            self.lending = Lending.objects.create(
+                user=self.user,
+                book=self.book,
+                operation="arrival",
+                arrival_quantity=2,
+            )
+            self.client.force_authenticate(user=self.user)
+
+        def test_lending_arrival_delete(self):
+            """Тест отмены поступления партии книги в библиотеку."""
+            url = reverse("library:lending_create")
+            data = {
+                "user": self.user.pk,
+                "book": self.book.pk,
+                "operation": "arrival",
+                "arrival_quantity": 1,
+            }
+            response = self.client.post(url, data)
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            self.assertEqual(Lending.objects.all().count(), 2)
+
+            url = reverse("library:lending_delete", args=(self.lending.pk,))
+            response = self.client.delete(url)
+            # print(response.json())
+            self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+            self.assertEqual(Lending.objects.all().count(), 1)
+
+        def test_lending_issuance_delete(self):
+            """Тест выдачи книги читателю."""
+            url = reverse("library:lending_create")
+            data = {
+                "user": self.user.pk,
+                "book": self.book.pk,
+                "operation": "issuance",
+            }
+            response = self.client.post(url, data)
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            self.assertEqual(Lending.objects.all().count(), 2)
+
+            url = reverse("library:lending_delete", args=(self.lending.pk,))
+            response = self.client.delete(url)
+            # print(response.json())
+            self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+            self.assertEqual(Lending.objects.all().count(), 1)
+
+        def test_lending_return_delete(self):
+            """Тест отмены возврата книги."""
+            url = reverse("library:lending_create")
+            data = {
+                "user": self.user.pk,
+                "book": self.book.pk,
+                "operation": "issuance",
+            }
+            response = self.client.post(url, data)
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            self.assertEqual(Lending.objects.all().count(), 2)
+
+            data = {
+                "user": self.user.pk,
+                "book": self.book.pk,
+                "operation": "return",
+            }
+            response = self.client.post(url, data)
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            self.assertEqual(Lending.objects.all().count(), 3)
+
+            url = reverse("library:lending_delete", args=(self.lending.pk,))
+            response = self.client.delete(url)
+            # print(response.json())
+            self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+            self.assertEqual(Lending.objects.all().count(), 2)
+
+        def test_lending_loss_delete(self):
+            """Тест отмены утери книги."""
+            url = reverse("library:lending_create")
+            data = {
+                "user": self.user.pk,
+                "book": self.book.pk,
+                "operation": "issuance",
+            }
+            response = self.client.post(url, data)
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            self.assertEqual(Lending.objects.all().count(), 2)
+
+            data = {
+                "user": self.user.pk,
+                "book": self.book.pk,
+                "operation": "loss",
+            }
+            response = self.client.post(url, data)
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            self.assertEqual(Lending.objects.all().count(), 3)
+
+            url = reverse("library:lending_delete", args=(self.lending.pk,))
+            response = self.client.delete(url)
+            # print(response.json())
+            self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+            self.assertEqual(Lending.objects.all().count(), 2)
+
+        def test_lending_loss_write_off(self):
+            """Тест списания утерянной книги."""
+            url = reverse("library:lending_create")
+            data = {
+                "user": self.user.pk,
+                "book": self.book.pk,
+                "operation": "issuance",
+            }
+            response = self.client.post(url, data)
+            lending_pk = self.lending.pk  # запоминаем id выдачи книги
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            self.assertEqual(Lending.objects.all().count(), 2)
+
+            data = {
+                "user": self.user.pk,
+                "book": self.book.pk,
+                "operation": "loss",
+            }
+            response = self.client.post(url, data)
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            self.assertEqual(Lending.objects.all().count(), 3)
+
+            url = reverse(
+                "library:lending_update", args=(lending_pk,)
+            )  #  эндпоинт выданной книги для пометки о списании
+            data = {"is_write_off": "true"}
+            response = self.client.patch(url, data)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(data.get("is_write_off"), "true")
