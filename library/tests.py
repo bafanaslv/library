@@ -147,7 +147,7 @@ class LibraryCreateTestCase(APITestCase):
         )
         self.client.force_authenticate(user=self.user)
 
-    def test_lesson_list(self):
+    def test_lending_list(self):
         url = reverse("library:lending_list")
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)

@@ -5,31 +5,27 @@
 # В проекте созданы три модели: авторы книг (Authors), собственно книги (Books) и операции по библитеке (Lendings).
 # Операции по библиотеке - поступление, выдача читетелю, возврат в библиотеку, списание книги и утеря книги.
 # Все операции можно отменять, если они не нарушают целостность базы данных.
-#
+# Предусмотрены различные варианты фильтрации и поиска в операциях, позволяющие находить нужную информацию как читателю
+# так и бибиотекарю. Опираясь на данную информацию библитекарь в то числе может строить разнообразные отчеты
+# (вышестоящие органы, в статистику и так далее)
+
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter, SearchFilter
-from rest_framework.generics import (
-    CreateAPIView,
-    DestroyAPIView,
-    ListAPIView,
-    RetrieveAPIView,
-    UpdateAPIView,
-)
+from rest_framework.generics import (CreateAPIView, DestroyAPIView,
+                                     ListAPIView, RetrieveAPIView,
+                                     UpdateAPIView)
 from rest_framework.permissions import IsAuthenticated
 
 from library.models import Authors, Books, Lending
-from library.paginations import AuthorsPaginator, BooksPaginator, LendingPaginator
-from library.serializer import (
-    AuthorsSerializer,
-    BooksSerializer,
-    BooksSerializerReadOnly,
-    LendingSerializer,
-    LendingSerializerReadOnly,
-    LendingSerializerWriteOff,
-)
+from library.paginations import (AuthorsPaginator, BooksPaginator,
+                                 LendingPaginator)
+from library.serializer import (AuthorsSerializer, BooksSerializer,
+                                BooksSerializerReadOnly, LendingSerializer,
+                                LendingSerializerReadOnly,
+                                LendingSerializerWriteOff)
 from users.permissions import IsLibrarian
 
 
@@ -104,7 +100,7 @@ class LendingListApiView(ListAPIView):
         OrderingFilter,
         DjangoFilterBackend,
     ]
-    ordering_fields = ("book",)
+    ordering_fields = ("book", "user", "date_event")
     filterset_fields = (
         "user",
         "book",
@@ -143,7 +139,7 @@ class LendingCreateApiView(CreateAPIView):
             book_object.amount_lending += 1
         elif operation == "return":
             # при возврате книги уменьшается количество выданных с данным названием книг (quantity_lending)
-            # далее в БД ищется операция выдачи книги пользователю и делается пометка о возврате
+            # далее в БД ищется операция выдачи книги пользователю и делается пометка о возврате (is_return = True)
             # при попытке повторного возврата появляется исключение
             lending_object_list = list(
                 Lending.objects.filter(
@@ -161,7 +157,7 @@ class LendingCreateApiView(CreateAPIView):
             )  # найденная операция выдачи
             book_object.quantity_lending -= 1
         elif operation == "write_off":
-            # при списании утерянной или физически изношенной книги уменьшается общее количество данных книг (quantity_all)
+            # при списании физически изношенной книги уменьшается общее количество данных книг (quantity_all)
             # пользователем (хозяином) операции в этом случае автоматически является библиотекарь
             serializer.validated_data["user"].pk = self.request.user.id
             book_object.quantity_all -= 1
@@ -221,12 +217,12 @@ class LendingDestroyApiView(DestroyAPIView):
                 < lending_object.arrival_quantity
             ):
                 raise ValidationError(
-                    f"Количество выданных книг '{book_object.name}' превысит их общее количество ! Удаление поступления невозможно !"
+                    f"Количество выданных книг '{book_object.name}' превысит их общее количество в библиотеке!"
+                    f" Удаление поступления невозможно !"
                 )
             book_object.quantity_all -= lending_object.arrival_quantity
         elif lending_object.operation == "issuance":
-            # удаление выдачи книги
-            # удаление невозможно если операция помечена возвратом (id_return - id операции возрата книги)
+            # удаление выдачи книги удаление невозможно если операция помечена возвратом (id_return > 0).
             if lending_object.id_return > 0:
                 if lending_object.is_return > 0:
                     raise ValidationError(
@@ -237,7 +233,7 @@ class LendingDestroyApiView(DestroyAPIView):
                         f"Невоможно удалить выдачу книги '{book_object.name}' - она утеряна!"
                     )
 
-            # при возврате книг меньшается количество выданных с данным названием книг (quantity_lending)
+            # при возврате книг уменьшается количество выданных книг читателям (quantity_lending)
             # и общее количество выдачи (amount_lending)
             book_object.quantity_lending -= 1
             book_object.amount_lending -= 1
@@ -253,7 +249,7 @@ class LendingDestroyApiView(DestroyAPIView):
             lending_issuance_object.save()
             book_object.quantity_lending += 1
         if lending_object.operation == "loss":
-            # далее в БД ищется операция выдачи книги и улаляется пометка об утере (id_return = 0, is_loss = False)
+            # в БД ищется операция выдачи книги и удаляется пометка об утере (id_return = 0, is_loss = False)
             # невозможно выполнить эту операцию если книга после утери списана.
             # при удалении операции потери общее количество книги в библиотеке увеличивается на 1 (quantity_all += 1)
             lending_issuance_object = Lending.objects.get(id_return=lending_object.pk)
@@ -273,7 +269,7 @@ class LendingDestroyApiView(DestroyAPIView):
 
 
 class LendingRetrieveApiView(RetrieveAPIView):
-    """Просматривать отдельную операцию могут авторизованный пользователь или библиотекарь."""
+    """Просматривать отдельную операцию могут только авторизованные пользователи или библиотекарь."""
 
     def get_queryset(self):
         if IsLibrarian().has_permission(self.request, self):
@@ -286,32 +282,21 @@ class LendingRetrieveApiView(RetrieveAPIView):
 
 
 class LendingUpdateApiView(UpdateAPIView):
-    """Изменения производятся только для списания утерянной книги."""
+    """Изменения проводятся только для списания и отмены списания утерянной книги."""
 
     queryset = Lending.objects.all()
     serializer_class = LendingSerializerWriteOff
 
     def perform_update(self, serializer):
-        """Перед сохраннием операции проверяем действительно ли она утеряна и не списана ли книга."""
+        """Перед сохраннием операции проверяем действительно ли она утеряна."""
         lending_object = Lending.objects.get(
             pk=self.kwargs["pk"]
         )  # изменяемая операция
+
         if lending_object.operation == "issuance" and lending_object.is_loss:
-            if lending_object.is_write_off:
-                if not lending_object.is_write_off:
-                    lending = serializer.save()
-                    lending.save()
-                else:
-                    raise ValidationError(
-                        f"Можно списать только утерянную и не списанную книгу."
-                    )
-            if not lending_object.is_write_off:
-                if lending_object.is_write_off:
-                    lending = serializer.save()
-                    lending.save()
-                else:
-                    raise ValidationError(
-                        f"Списание уже отменено."
-                    )
+            lending = serializer.save()
+            lending.save()
+        else:
+            raise ValidationError(f"Можно списать только утерянную книгу.")
 
     permission_classes = [IsLibrarian]

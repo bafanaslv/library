@@ -5,15 +5,9 @@ from rest_framework import permissions
 from rest_framework.routers import SimpleRouter
 
 from library.apps import LibraryConfig
-from library.views import (
-    AuthorsViewSet,
-    BooksViewSet,
-    LendingCreateApiView,
-    LendingDestroyApiView,
-    LendingListApiView,
-    LendingRetrieveApiView,
-    LendingUpdateApiView,
-)
+from library.views import (AuthorsViewSet, BooksViewSet, LendingCreateApiView,
+                           LendingDestroyApiView, LendingListApiView,
+                           LendingRetrieveApiView, LendingUpdateApiView)
 
 schema_view = get_schema_view(
     openapi.Info(
