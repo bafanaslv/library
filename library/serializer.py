@@ -11,7 +11,6 @@ class AuthorsSerializerReadOnly(ModelSerializer):
     class Meta:
         model = Authors
         fields = (
-            "id",
             "author",
         )
 
@@ -32,6 +31,10 @@ class BooksSerializerReadOnly(serializers.ModelSerializer):
             "id",
             "author",
             "name",
+            "genre",
+            "quantity_all",
+            "quantity_lending",
+            "amount_lending",
         )
 
 
