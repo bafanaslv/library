@@ -81,6 +81,7 @@ class Books(models.Model):
 
 class Lending(models.Model):
     OPERATION = [
+        ("inventory", "инвентаризация"),
         ("arrival", "поступление"),
         ("issuance", "выдача"),
         ("return", "возврат"),
@@ -110,8 +111,9 @@ class Lending(models.Model):
     is_loss = models.BooleanField(verbose_name="пометка об утере", default=False)
     is_write_off = models.BooleanField(verbose_name="пометка о списании", default=False)
     arrival_quantity = models.IntegerField(
-        verbose_name="Количество поступивших книг.", **NULLABLE
+        verbose_name="Количество поступивших книг.", default=0
     )
+    issued_quantity = models.IntegerField(verbose_name="выдано читателям",default=0)
 
     def __str__(self):
         return f"{self.user} : {self.book} - {self.operation}"

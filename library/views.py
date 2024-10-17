@@ -126,6 +126,14 @@ class LendingCreateApiView(CreateAPIView):
         book_user_id = serializer.validated_data["user"].pk
         book_name = serializer.validated_data["book"].name
         book_object = Books.objects.get(pk=book_return_id)
+        if operation == "inventory":
+            # при поступлении партии книг увеличивается общее количество книг с таким названием (quantity_all)
+            # пользователем (хозяином) операции в этом случае автоматически является библиотекарь
+            serializer.validated_data["user"].pk = self.request.user.id
+            quantity = serializer.validated_data["arrival_quantity"]
+            issued = serializer.validated_data["issued_quantity"]
+            book_object.quantity_all += quantity
+            book_object.quantity_lending += issued
         if operation == "arrival":
             # при поступлении партии книг увеличивается общее количество книг с таким названием (quantity_all)
             # пользователем (хозяином) операции в этом случае автоматически является библиотекарь
