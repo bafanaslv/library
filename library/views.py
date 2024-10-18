@@ -191,6 +191,7 @@ class LendingCreateApiView(CreateAPIView):
                 pk=lending_object_id
             )  # найденная операция выдачи
             book_object.quantity_all -= 1
+            book_object.amount_lending -= 1
 
         lending = serializer.save()
         book_object.save()

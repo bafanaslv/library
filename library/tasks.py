@@ -22,17 +22,19 @@ def send_mail_return_books():
     # books_for_return - список книг не возвращненых читателями
     books_for_return = Lending.objects.filter(operation="issuance", id_return=0)
     if books_for_return:
-        message = ""
         for book_for_return in books_for_return:
             if today > book_for_return.date_event + timedelta(days=10):
                 message = (
                     f"Вы должны немедленно вернуть книгу {book_for_return.book.name}"
                 )
+                print(message)
             elif today == book_for_return.date_event + timedelta(days=10):
                 message = f"Вы сегодня должны вернуть книгу {book_for_return.book.name}"
+                print(message)
             else:
                 if today == book_for_return.date_event + timedelta(days=7):
                     message = f"Вы должны вернуть книгу {book_for_return.book.name} {book_for_return.date_event + timedelta(days=10)}"
+                print(message)
 
             if message:
                 user_tg = (
